@@ -1,0 +1,10 @@
+.env
+app/.env
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.DS_Store
+*.zip
+*.csv
+docs/GUIA_PASO_A_PASO.md
