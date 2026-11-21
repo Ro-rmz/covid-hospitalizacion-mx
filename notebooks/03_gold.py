@@ -50,6 +50,10 @@ calidad = [
     ("gold", "registros_finales", n_gold, "Filas listas para entrenar"),
     ("gold", "hospitalizados", pos, f"Clase positiva = {pos / n_gold:.2%} → clases desbalanceadas"),
 ]
+# Si este notebook se vuelve a correr, se reemplazan sus filas en vez de duplicarlas
+if spark.catalog.tableExists(T_CALIDAD):
+    spark.sql(f"DELETE FROM {T_CALIDAD} WHERE capa = 'gold'")
+
 spark.createDataFrame(calidad, "capa string, paso string, filas long, descripcion string") \
     .withColumn("_fecha", F.current_timestamp()) \
     .write.mode("append").saveAsTable(T_CALIDAD)

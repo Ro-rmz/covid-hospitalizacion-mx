@@ -139,6 +139,10 @@ calidad.append(("silver", "registros_finales", n_final, "Filas en la tabla Silve
     .saveAsTable(T_SILVER)
 )
 
+# Si este notebook se vuelve a correr, se reemplazan sus filas en vez de duplicarlas
+if spark.catalog.tableExists(T_CALIDAD):
+    spark.sql(f"DELETE FROM {T_CALIDAD} WHERE capa = 'silver'")
+
 spark.createDataFrame(calidad, "capa string, paso string, filas long, descripcion string") \
     .withColumn("_fecha", F.current_timestamp()) \
     .write.mode("append").saveAsTable(T_CALIDAD)
