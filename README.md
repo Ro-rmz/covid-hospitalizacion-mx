@@ -17,6 +17,7 @@ Autor: **Rodrigo Ramírez** (proyecto individual).
 - [Resultados](#-resultados)
 - [Publicación del modelo (API)](#-publicación-del-modelo-api)
 - [Aplicación de consulta](#-aplicación-de-consulta)
+- [Dashboard](#-dashboard)
 - [Cómo ejecutarlo](#-cómo-ejecutarlo)
 - [Estructura del repositorio](#-estructura-del-repositorio)
 - [Limitaciones y trabajo futuro](#-limitaciones-y-trabajo-futuro)
@@ -218,6 +219,12 @@ curl -X POST "$DATABRICKS_HOST/serving-endpoints/covid-hospitalizacion/invocatio
 
 La barra lateral muestra el estado del endpoint (`READY`/`NOT_READY`) y un panel deja ver la solicitud y la respuesta JSON reales. Las pruebas en [`tests/`](tests) cubren estos casos con respuestas simuladas.
 
+## 📊 Dashboard
+
+Dashboard de **Databricks AI/BI** construido directamente sobre las tablas de la capa Gold y el reporte `calidad_datos`. Se actualiza solo cada vez que corre el Job. Muestra el volumen procesado, la tasa de hospitalización por estado y por perfil (edad × comorbilidades), y la trazabilidad de la limpieza por capa.
+
+![Dashboard en Databricks](docs/img/dashboard.png)
+
 ## ▶️ Cómo ejecutarlo
 
 ### 1. Databricks (Free Edition)
@@ -271,7 +278,7 @@ python -m pytest -q
 - El riesgo cambió a lo largo de la pandemia (variantes, vacunación); el modelo no incluye la fecha. Siguiente paso: agregar la ola epidémica o el estatus de vacunación.
 - `TIPO_PACIENTE` refleja la decisión del médico y la disponibilidad de camas, no solo la gravedad.
 - Las comorbilidades son autorreportadas.
-- Trabajo futuro: un dashboard con `gold_resumen_entidad` y reentrenamiento solo cuando cambie la distribución de los datos (*data drift*).
+- Trabajo futuro: reentrenamiento solo cuando cambie la distribución de los datos (*data drift*).
 
 ---
 
