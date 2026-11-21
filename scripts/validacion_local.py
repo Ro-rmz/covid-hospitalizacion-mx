@@ -18,7 +18,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from modelo_covid import COMORBILIDADES, FEATURES_ENTRADA, TARGET, entrenar_y_evaluar  # noqa: E402
+from modelo_covid import (  # noqa: E402
+    COMORBILIDADES, FEATURES_ENTRADA, TARGET, entrenar_y_evaluar, f1_linea_base, importancia_permutacion,
+)
 
 MAX_FILAS_ENTRENAMIENTO = 1_500_000
 SEED = 42
@@ -99,8 +101,12 @@ def main(zips):
     conf = s[s["clasificacion_final"].isin([1, 2, 3])]
     gold = conf.dropna(subset=FEATURES_ENTRADA)[FEATURES_ENTRADA + [TARGET]].astype("int64")
     pos = int(gold[TARGET].sum())
-    calidad += [("gold", "casos_confirmados", len(conf)),
-                ("gold", "eliminados_por_variables_nulas", len(conf) - len(gold)),
+    n_conf = len(conf)
+    del df, s, conf  # liberar memoria antes de entrenar
+    import gc
+    gc.collect()
+    calidad += [("gold", "casos_confirmados", n_conf),
+                ("gold", "eliminados_por_variables_nulas", n_conf - len(gold)),
                 ("gold", "registros_finales", len(gold)),
                 ("gold", "hospitalizados", pos)]
 
@@ -118,7 +124,11 @@ def main(zips):
     X_va, X_te, y_va, y_te = train_test_split(X_tmp, y_tmp, test_size=0.50, stratify=y_tmp, random_state=SEED)
     res = entrenar_y_evaluar(X_tr, y_tr, X_va, y_va, X_te, y_te, seed=SEED)
 
+    imp = importancia_permutacion(res.modelo, X_te.head(200_000), y_te.head(200_000))
+
     salida = {
+        "f1_linea_base": f1_linea_base(y_te),
+        "importancia_pr_auc": imp.round(4).to_dict(),
         "calidad": [{"capa": a, "paso": b, "filas": int(c)} for a, b, c in calidad],
         "pct_hospitalizados_gold": pos / len(gold),
         "filas_muestra": len(muestra),

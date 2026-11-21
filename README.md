@@ -146,7 +146,25 @@ Muestra estratificada de 1.5 M de los 4.04 M registros de Gold (70/15/15). Valor
 
 **Modelo final (Gradient Boosting) en PRUEBA:** F1 = **0.550** · Recall = 0.618 · Precision = 0.496 · ROC-AUC = 0.854 · PR-AUC = 0.555 · umbral = 0.679
 
+**Línea base:** un modelo trivial que marca a *todos* como hospitalizados obtiene F1 = **0.265**. El modelo la supera **2.1 veces** (0.550).
+
 Cómo leerlo: de cada 100 pacientes que sí terminaron hospitalizados, el modelo detecta a ~62; y de cada 2 alertas, ~1 es correcta. Con una base de 15 % de positivos, un PR-AUC de 0.555 es 3.6 veces mejor que adivinar.
+
+**¿Qué variables pesan más?** Importancia por permutación (cuánto cae el PR-AUC si se revuelve cada variable), sobre 200 mil registros de prueba:
+
+| Variable | Caída del PR-AUC |
+|---|---|
+| Edad | 0.271 |
+| Entidad de residencia | 0.073 |
+| Diabetes | 0.025 |
+| Enfermedad renal crónica | 0.019 |
+| Sexo | 0.016 |
+| Obesidad | 0.008 |
+| Otra comorbilidad | 0.007 |
+| Hipertensión | 0.006 |
+| Resto (inmunosupresión, EPOC, embarazo, tabaquismo, cardiovascular, asma) | < 0.003 cada una |
+
+La edad domina por mucho. La entidad importa porque cada estado tuvo criterios y capacidad hospitalaria distintos, y entre las comorbilidades destacan diabetes y enfermedad renal crónica.
 
 **Hallazgos de Gold** (`gold_resumen_perfil`), tasa de hospitalización por perfil:
 

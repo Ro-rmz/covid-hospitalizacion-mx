@@ -34,7 +34,9 @@ from mlflow.models import infer_signature
 from mlflow.tracking import MlflowClient
 from sklearn.model_selection import train_test_split
 
-from modelo_covid import FEATURES_ENTRADA, TARGET, entrenar_y_evaluar, predecir
+from modelo_covid import (
+    FEATURES_ENTRADA, TARGET, entrenar_y_evaluar, f1_linea_base, importancia_permutacion, predecir,
+)
 from pyfunc_wrapper import ModeloHospitalizacionCovid
 
 mlflow.set_registry_uri("databricks-uc")
@@ -70,6 +72,11 @@ with mlflow.start_run(run_name="covid_hospitalizacion") as run:
         "metrica_principal": "f1",
     })
     mlflow.log_metrics({f"test_{k}": v for k, v in res.metricas_prueba.items()})
+    # Línea base: marcar a todos como hospitalizados (recall = 1). El modelo debe superarla con claridad.
+    mlflow.log_metric("test_f1_linea_base", f1_linea_base(y_test))
+    # ¿Qué variables pesan más? Caída del PR-AUC al revolver cada variable (muestra de prueba)
+    importancia = importancia_permutacion(res.modelo, X_test.head(200_000), y_test.head(200_000))
+    mlflow.log_metrics({f"importancia__{k}": v for k, v in importancia.items()})
     for nombre, valores in res.comparativa.items():
         mlflow.log_metrics({f"{nombre}__{k}": v for k, v in valores.items()})
 
@@ -101,6 +108,8 @@ with mlflow.start_run(run_name="covid_hospitalizacion") as run:
 
 print("Modelo elegido:", res.nombre_modelo, "| umbral:", round(res.umbral, 4))
 display(pd.DataFrame(res.comparativa).T)
+print(f"F1 línea base (todos hospitalizados): {f1_linea_base(y_test):.3f} vs. modelo: {res.metricas_prueba['f1']:.3f}")
+display(importancia.rename("caida_pr_auc").to_frame())
 print("Métricas en PRUEBA:", json.dumps({k: round(v, 4) for k, v in res.metricas_prueba.items()}, indent=2))
 
 # COMMAND ----------

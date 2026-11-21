@@ -230,6 +230,34 @@ def entrenar_y_evaluar(
     return ResultadoEntrenamiento(nombre, pipe, umbral, m_val, m_test, comparativa)
 
 
+def f1_linea_base(y_true) -> float:
+    """F1 de un modelo trivial que marca a TODOS como hospitalizados (recall = 1)."""
+    p = float(np.mean(y_true))
+    return 2 * p / (1 + p)
+
+
+def importancia_permutacion(
+    modelo: Pipeline, X: pd.DataFrame, y, n_repeticiones: int = 3, seed: int = 42
+) -> pd.Series:
+    """
+    Importancia por permutación sobre las variables de ENTRADA (las que captura el usuario):
+    cuánto cae el PR-AUC si se revuelve esa columna. Las comorbilidades también alimentan
+    n_comorbilidades y la edad alimenta grupo_edad, así que el efecto total queda en cada una.
+    """
+    rng = np.random.default_rng(seed)
+    X = X[FEATURES_ENTRADA].reset_index(drop=True)
+    base = average_precision_score(y, modelo.predict_proba(preparar_features(X))[:, 1])
+    caidas = {}
+    for c in FEATURES_ENTRADA:
+        valores = []
+        for _ in range(n_repeticiones):
+            Xp = X.copy()
+            Xp[c] = rng.permutation(Xp[c].to_numpy())
+            valores.append(base - average_precision_score(y, modelo.predict_proba(preparar_features(Xp))[:, 1]))
+        caidas[c] = float(np.mean(valores))
+    return pd.Series(caidas).sort_values(ascending=False)
+
+
 def predecir(modelo: Pipeline, umbral: float, df: pd.DataFrame) -> pd.DataFrame:
     """Valida, transforma y predice. Es lo que ejecuta el endpoint."""
     validar_entrada(df)
