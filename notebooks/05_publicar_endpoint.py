@@ -35,9 +35,14 @@ entidad = ServedEntityInput(
 existentes = {e.name for e in w.serving_endpoints.list()}
 if ENDPOINT_NAME not in existentes:
     print(f"Creando endpoint {ENDPOINT_NAME} con la versión {version} (tarda ~10-20 min)...")
+    # Según la versión del SDK, EndpointCoreConfigInput pide (o no acepta) el nombre
+    try:
+        config = EndpointCoreConfigInput(name=ENDPOINT_NAME, served_entities=[entidad])
+    except TypeError:
+        config = EndpointCoreConfigInput(served_entities=[entidad])
     w.serving_endpoints.create_and_wait(
         name=ENDPOINT_NAME,
-        config=EndpointCoreConfigInput(served_entities=[entidad]),
+        config=config,
         timeout=timedelta(minutes=45),
     )
 else:
