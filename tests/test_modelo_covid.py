@@ -85,3 +85,13 @@ def test_validacion_columnas_y_nulos():
 
 def test_validacion_acepta_registro_valido():
     validar_entrada(registro(es_mujer=1, embarazo=1, diabetes=1))
+
+
+def test_calibracion_regresa_a_escala_real():
+    from modelo_covid import calibrar
+    # Con prevalencia 0.5 (lo que "ve" class_weight balanced) no cambia nada
+    assert np.allclose(calibrar([0.2, 0.7], 0.5), [0.2, 0.7])
+    # Con prevalencia baja, baja la probabilidad pero conserva el orden
+    p = calibrar([0.3, 0.6, 0.9], 0.15)
+    assert np.all(np.diff(p) > 0) and p[-1] < 0.9
+    assert np.allclose(calibrar([0.4], None), [0.4])

@@ -19,7 +19,8 @@ from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from modelo_covid import (  # noqa: E402
-    COMORBILIDADES, FEATURES_ENTRADA, TARGET, entrenar_y_evaluar, f1_linea_base, importancia_permutacion,
+    COMORBILIDADES, FEATURES_ENTRADA, TARGET, calibrar, entrenar_y_evaluar, f1_linea_base, importancia_permutacion,
+    predecir,
 )
 
 MAX_FILAS_ENTRENAMIENTO = 1_500_000
@@ -124,10 +125,22 @@ def main(zips):
     X_va, X_te, y_va, y_te = train_test_split(X_tmp, y_tmp, test_size=0.50, stratify=y_tmp, random_state=SEED)
     res = entrenar_y_evaluar(X_tr, y_tr, X_va, y_va, X_te, y_te, seed=SEED)
 
+    # Calibración: ¿la probabilidad promedio coincide con la tasa real?
+    prevalencia = float(y_tr.mean())
+    p_te = predecir(res.modelo, res.umbral, X_te.reset_index(drop=True), prevalencia)["probabilidad"].to_numpy()
+    deciles = pd.qcut(p_te, 10, labels=False, duplicates="drop")
+    calib = (pd.DataFrame({"decil": deciles, "prob": p_te, "real": y_te.to_numpy()})
+             .groupby("decil").mean().round(3).to_dict(orient="records"))
+
     imp = importancia_permutacion(res.modelo, X_te.head(200_000), y_te.head(200_000))
 
     salida = {
         "f1_linea_base": f1_linea_base(y_te),
+        "prevalencia": prevalencia,
+        "umbral_calibrado": float(calibrar([res.umbral], prevalencia)[0]),
+        "prob_media_calibrada": float(p_te.mean()),
+        "tasa_real_prueba": float(y_te.mean()),
+        "calibracion_por_decil": calib,
         "importancia_pr_auc": imp.round(4).to_dict(),
         "calidad": [{"capa": a, "paso": b, "filas": int(c)} for a, b, c in calidad],
         "pct_hospitalizados_gold": pos / len(gold),

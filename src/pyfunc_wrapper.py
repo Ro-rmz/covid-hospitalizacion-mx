@@ -17,9 +17,11 @@ class ModeloHospitalizacionCovid(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
         self.modelo = joblib.load(context.artifacts["pipeline"])
         with open(context.artifacts["config"]) as f:
-            self.umbral = float(json.load(f)["umbral"])
+            config = json.load(f)
+        self.umbral = float(config["umbral"])
+        self.prevalencia = config.get("prevalencia")  # para calibrar la probabilidad
 
     def predict(self, context, model_input, params=None):
         # Si la entrada no es válida, se lanza EntradaInvalida (ValueError)
         # y Databricks Model Serving responde con un error 400.
-        return predecir(self.modelo, self.umbral, model_input)
+        return predecir(self.modelo, self.umbral, model_input, self.prevalencia)

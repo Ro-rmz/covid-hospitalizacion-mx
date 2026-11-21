@@ -144,7 +144,9 @@ Muestra estratificada de 1.5 M de los 4.04 M registros de Gold (70/15/15). Valor
 | Regresión logística | 0.539 | 0.616 | 0.479 | 0.843 | 0.530 |
 | **Gradient Boosting** ✅ | **0.545** | 0.613 | 0.491 | **0.851** | **0.546** |
 
-**Modelo final (Gradient Boosting) en PRUEBA:** F1 = **0.550** · Recall = 0.618 · Precision = 0.496 · ROC-AUC = 0.854 · PR-AUC = 0.555 · umbral = 0.679
+**Modelo final (Gradient Boosting) en PRUEBA:** F1 = **0.550** · Recall = 0.618 · Precision = 0.496 · ROC-AUC = 0.854 · PR-AUC = 0.555 · umbral = 0.276 (en escala de probabilidad real)
+
+**Probabilidades calibradas.** Entrenar con `class_weight="balanced"` equivale a fingir que la mitad de los pacientes se hospitaliza: ayuda a detectar la clase minoritaria, pero infla las probabilidades. Antes de responder, el modelo aplica una **corrección de prior** (momios × π/(1−π), con π = 15.2 %) que regresa cada puntaje a la escala real sin cambiar el orden ni las decisiones. En prueba, la probabilidad promedio es 15.2 % contra una tasa real de 15.2 %, y por deciles coincide (el decil más alto predice 61.4 % y en realidad se hospitalizó el 62.4 %).
 
 **Línea base:** un modelo trivial que marca a *todos* como hospitalizados obtiene F1 = **0.265**. El modelo la supera **2.1 veces** (0.550).
 

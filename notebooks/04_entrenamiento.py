@@ -58,6 +58,9 @@ X_val, X_test, y_val, y_test = train_test_split(X_tmp, y_tmp, test_size=0.50, st
 
 # COMMAND ----------
 
+# % real de hospitalizados: sirve para regresar las probabilidades a la escala real
+prevalencia = float(y_train.mean())
+
 with mlflow.start_run(run_name="covid_hospitalizacion") as run:
     res = entrenar_y_evaluar(X_train, y_train, X_val, y_val, X_test, y_test, seed=SEED)
 
@@ -70,6 +73,7 @@ with mlflow.start_run(run_name="covid_hospitalizacion") as run:
         "filas_prueba": len(X_test),
         "proporcion_positivos": round(float(y.mean()), 4),
         "metrica_principal": "f1",
+        "prevalencia_calibracion": round(prevalencia, 4),
     })
     mlflow.log_metrics({f"test_{k}": v for k, v in res.metricas_prueba.items()})
     # Línea base: marcar a todos como hospitalizados (recall = 1). El modelo debe superarla con claridad.
@@ -85,10 +89,10 @@ with mlflow.start_run(run_name="covid_hospitalizacion") as run:
         ruta_config = os.path.join(tmp, "config.json")
         joblib.dump(res.modelo, ruta_pipeline)
         with open(ruta_config, "w") as f:
-            json.dump({"umbral": res.umbral, "modelo": res.nombre_modelo}, f)
+            json.dump({"umbral": res.umbral, "modelo": res.nombre_modelo, "prevalencia": prevalencia}, f)
 
         ejemplo = X_test.head(5).astype("int64").reset_index(drop=True)
-        salida = predecir(res.modelo, res.umbral, ejemplo)
+        salida = predecir(res.modelo, res.umbral, ejemplo, prevalencia)
         firma = infer_signature(ejemplo, salida)
 
         info = mlflow.pyfunc.log_model(

@@ -258,14 +258,32 @@ def importancia_permutacion(
     return pd.Series(caidas).sort_values(ascending=False)
 
 
-def predecir(modelo: Pipeline, umbral: float, df: pd.DataFrame) -> pd.DataFrame:
+def calibrar(prob, prevalencia: float | None):
+    """
+    Los modelos se entrenan con class_weight="balanced", que equivale a fingir que
+    hay 50 % de hospitalizados. Eso sirve para detectar la clase minoritaria, pero infla
+    las probabilidades. Esta corrección de prior regresa cada puntaje a la escala real:
+    momios_reales = momios_modelo × (π / (1 − π)), con π = % real de hospitalizados.
+    Es monótona: no cambia el orden ni las decisiones, solo la escala.
+    """
+    prob = np.clip(np.asarray(prob, dtype="float64"), 1e-9, 1 - 1e-9)
+    if prevalencia is None:
+        return prob
+    momios = prob / (1 - prob) * (prevalencia / (1 - prevalencia))
+    return momios / (1 + momios)
+
+
+def predecir(
+    modelo: Pipeline, umbral: float, df: pd.DataFrame, prevalencia: float | None = None
+) -> pd.DataFrame:
     """Valida, transforma y predice. Es lo que ejecuta el endpoint."""
     validar_entrada(df)
-    prob = modelo.predict_proba(preparar_features(df))[:, 1]
+    prob = calibrar(modelo.predict_proba(preparar_features(df))[:, 1], prevalencia)
+    umbral_cal = float(calibrar([umbral], prevalencia)[0])
     return pd.DataFrame(
         {
             "probabilidad": prob.astype("float64"),
-            "hospitalizacion_predicha": (prob >= umbral).astype("int64"),
-            "nivel_riesgo": nivel_riesgo(prob, umbral),
+            "hospitalizacion_predicha": (prob >= umbral_cal).astype("int64"),
+            "nivel_riesgo": nivel_riesgo(prob, umbral_cal),
         }
     )
