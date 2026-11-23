@@ -117,7 +117,7 @@ Cada paso registra cuántas filas afectó en la tabla **`calidad_datos`**:
 | registros_finales (Gold) | 4,042,001 |
 | hospitalizados | 616,223 (15.2 %) |
 
-> Cifras de la **validación local** ([`scripts/validacion_local.py`](scripts/validacion_local.py)), que replica en pandas las mismas reglas del pipeline de PySpark sobre los mismos archivos. La ejecución en Databricks las registra en la tabla `calidad_datos`.
+> Cifras de la ejecución en Databricks (tabla `calidad_datos`, ver el [dashboard](#-dashboard)). La réplica en pandas [`scripts/validacion_local.py`](scripts/validacion_local.py) obtiene exactamente los mismos conteos, lo que valida las reglas de limpieza.
 
 ### 🥇 Gold ([03_gold](notebooks/03_gold.py))
 - **`gold_features_hospitalizacion`:** solo casos **confirmados** (`CLASIFICACION_FINAL` 1–3), con 14 variables conocidas *al llegar a consulta* + objetivo `hospitalizado`.
