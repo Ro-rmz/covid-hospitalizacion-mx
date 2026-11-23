@@ -118,7 +118,7 @@ if enviar:
     st.subheader(f"{COLOR[pred.nivel_riesgo]} Riesgo {pred.nivel_riesgo.upper()}")
     m1, m2, m3 = st.columns(3)
     m1.metric("Probabilidad de hospitalización", f"{pred.probabilidad:.1%}")
-    m2.metric("Predicción", "Hospitalización" if pred.hospitalizacion_predicha else "Ambulatorio")
+    m2.metric("¿Requiere hospitalización?", "Sí" if pred.hospitalizacion_predicha else "No")
     m3.metric("Latencia", f"{latencia:.2f} s")
     st.progress(min(max(pred.probabilidad, 0.0), 1.0))
 

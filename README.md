@@ -223,6 +223,12 @@ curl -X POST "$DATABRICKS_HOST/serving-endpoints/covid-hospitalizacion/invocatio
 | 400 | Muestra el motivo de rechazo del servidor |
 | Respuesta inválida (no JSON, sin `predictions`, probabilidad fuera de [0,1], nivel desconocido) | `RespuestaInvalida` validada con Pydantic |
 
+| Perfil de riesgo bajo | Perfil de riesgo alto |
+|---|---|
+| ![App riesgo bajo](docs/img/app_bajo.png) | ![App riesgo alto](docs/img/app_alto.png) |
+
+La primera consulta tardó 37.9 s porque el endpoint estaba apagado (*scale-to-zero*) y la app esperó a que despertara; las siguientes responden en ~0.3 s.
+
 La barra lateral muestra el estado del endpoint (`READY`/`NOT_READY`) y un panel deja ver la solicitud y la respuesta JSON reales. Las pruebas en [`tests/`](tests) cubren estos casos con respuestas simuladas.
 
 ## 📊 Dashboard
