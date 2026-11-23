@@ -55,6 +55,12 @@ flowchart LR
     U((Usuario)) --> W
 ```
 
+**Job en Databricks:** las 5 tareas encadenadas, programadas cada lunes a las 06:00 (America/Mexico_City).
+
+![Tareas del Job](docs/img/job_tareas.png)
+
+![Corrida exitosa del Job](docs/img/job_corrida.png)
+
 | Componente | Tecnología |
 |---|---|
 | Almacenamiento | Delta Lake sobre Unity Catalog (`workspace.covid_mx`) |
