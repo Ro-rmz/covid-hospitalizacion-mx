@@ -161,8 +161,6 @@ Cómo leerlo: de cada 100 pacientes que sí terminaron hospitalizados, el modelo
 
 **Línea base:** un modelo trivial que marca a *todos* como hospitalizados obtiene F1 = **0.265**. El modelo la supera **2.1 veces** (0.552).
 
-Cómo leerlo: de cada 100 pacientes que sí terminaron hospitalizados, el modelo detecta a ~62; y de cada 2 alertas, ~1 es correcta. Con una base de 15 % de positivos, un PR-AUC de 0.555 es 3.6 veces mejor que adivinar.
-
 **¿Qué variables pesan más?** Importancia por permutación (cuánto cae el PR-AUC si se revuelve cada variable), sobre 200 mil registros de prueba:
 
 | Variable | Caída del PR-AUC |
