@@ -144,18 +144,22 @@ Cada paso registra cuántas filas afectó en la tabla **`calidad_datos`**:
 
 ## 📈 Resultados
 
-Muestra estratificada de 1.5 M de los 4.04 M registros de Gold (70/15/15). Valores de la validación local; en Databricks quedan en MLflow (Experiments → `covid_hospitalizacion_mx`).
+Muestra estratificada de 1.5 M de los 4.04 M registros de Gold (70/15/15: 1,050,854 / 225,183 / 225,184). Resultados de la corrida del Job en Databricks, registrados en MLflow (Experiments → `covid_hospitalizacion_mx`).
 
-| Modelo | F1 (val) | Recall (val) | Precision (val) | ROC-AUC (val) | PR-AUC (val) |
-|---|---|---|---|---|---|
-| Regresión logística | 0.539 | 0.616 | 0.479 | 0.843 | 0.530 |
-| **Gradient Boosting** ✅ | **0.545** | 0.613 | 0.491 | **0.851** | **0.546** |
+| Modelo | F1 (val) | Recall (val) | Precision (val) | ROC-AUC (val) |
+|---|---|---|---|---|
+| Regresión logística | 0.546 | 0.622 | 0.487 | 0.846 |
+| **Gradient Boosting** ✅ | **0.553** | 0.616 | 0.501 | **0.853** |
 
-**Modelo final (Gradient Boosting) en PRUEBA:** F1 = **0.550** · Recall = 0.618 · Precision = 0.496 · ROC-AUC = 0.854 · PR-AUC = 0.555 · umbral = 0.276 (en escala de probabilidad real)
+**Modelo final (Gradient Boosting) en PRUEBA:** F1 = **0.552** · Recall = 0.616 · Precision = 0.500 · ROC-AUC = 0.853 · PR-AUC = 0.553 · umbral = 0.279 (en escala de probabilidad real)
 
-**Probabilidades calibradas.** Entrenar con `class_weight="balanced"` equivale a fingir que la mitad de los pacientes se hospitaliza: ayuda a detectar la clase minoritaria, pero infla las probabilidades. Antes de responder, el modelo aplica una **corrección de prior** (momios × π/(1−π), con π = 15.2 %) que regresa cada puntaje a la escala real sin cambiar el orden ni las decisiones. En prueba, la probabilidad promedio es 15.2 % contra una tasa real de 15.2 %, y por deciles coincide (el decil más alto predice 61.4 % y en realidad se hospitalizó el 62.4 %).
+Matriz de confusión en prueba: 21,187 verdaderos positivos · 21,184 falsos positivos · 13,210 falsos negativos · 169,603 verdaderos negativos.
 
-**Línea base:** un modelo trivial que marca a *todos* como hospitalizados obtiene F1 = **0.265**. El modelo la supera **2.1 veces** (0.550).
+Cómo leerlo: de cada 100 pacientes que sí terminaron hospitalizados, el modelo detecta a ~62; y de cada 2 alertas, 1 es correcta. Con una base de 15 % de positivos, un PR-AUC de 0.553 es 3.6 veces mejor que adivinar.
+
+**Probabilidades calibradas.** Entrenar con `class_weight="balanced"` equivale a fingir que la mitad de los pacientes se hospitaliza: ayuda a detectar la clase minoritaria, pero infla las probabilidades. Antes de responder, el modelo aplica una **corrección de prior** (momios × π/(1−π), con π = 15.2 %) que regresa cada puntaje a la escala real sin cambiar el orden ni las decisiones. En la validación con los mismos datos, la probabilidad promedio fue 15.2 % contra una tasa real de 15.2 %, y por deciles coincide (el decil más alto predice 61.4 % y en realidad se hospitalizó el 62.4 %).
+
+**Línea base:** un modelo trivial que marca a *todos* como hospitalizados obtiene F1 = **0.265**. El modelo la supera **2.1 veces** (0.552).
 
 Cómo leerlo: de cada 100 pacientes que sí terminaron hospitalizados, el modelo detecta a ~62; y de cada 2 alertas, ~1 es correcta. Con una base de 15 % de positivos, un PR-AUC de 0.555 es 3.6 veces mejor que adivinar.
 
@@ -164,14 +168,11 @@ Cómo leerlo: de cada 100 pacientes que sí terminaron hospitalizados, el modelo
 | Variable | Caída del PR-AUC |
 |---|---|
 | Edad | 0.271 |
-| Entidad de residencia | 0.073 |
-| Diabetes | 0.025 |
-| Enfermedad renal crónica | 0.019 |
-| Sexo | 0.016 |
-| Obesidad | 0.008 |
-| Otra comorbilidad | 0.007 |
-| Hipertensión | 0.006 |
-| Resto (inmunosupresión, EPOC, embarazo, tabaquismo, cardiovascular, asma) | < 0.003 cada una |
+| Entidad de residencia | 0.075 |
+| Diabetes | 0.023 |
+| Enfermedad renal crónica | 0.016 |
+| Sexo | 0.015 |
+| Resto (obesidad, otra comorbilidad, hipertensión, inmunosupresión, EPOC, embarazo, tabaquismo, cardiovascular, asma) | < 0.009 cada una |
 
 La edad domina por mucho. La entidad importa porque cada estado tuvo criterios y capacidad hospitalaria distintos, y entre las comorbilidades destacan diabetes y enfermedad renal crónica.
 
